@@ -45,7 +45,7 @@ AS $powblock$
           n=n*2-1
         mkl_list = [None for _ in range(n)]
         for i in range(ln):
-          plpy.log(n,level,ln,i,ln - 1 + i)
+         
           mkl_list[ln - 1 + i] = hashlib.sha256(str(trans_list[i]).encode()).hexdigest()
             
 
@@ -85,7 +85,7 @@ AS $powblock$
         continue
       s+=str(row[key])
     hash_list.append(hashlib.sha256(s.encode()).hexdigest())
-  plpy.log(len(hash_list))
+  
   if hash_list:
     mkl_root=add_mkl_tree(hash_list)
   else:
@@ -98,6 +98,7 @@ AS $powblock$
   else:
     prev_hash="0"
     
+  '''proof of work do here'''
   block_hash=proof_of_work(block_table_name,prev_hash,mkl_root,THRESHOLD,ts)
   plpy.execute(f"UPDATE {t_name} SET blockhash='{block_hash}' where blockhash IS NULL")
   

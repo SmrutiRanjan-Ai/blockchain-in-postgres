@@ -3,6 +3,7 @@ from psycopg2 import Error
 import os
 import datetime
 import hashlib
+dirA = '/home/tula/Documents/631/blockchain/'  # Directory where blk*.dat files are stored
 def merkle_root(lst): # https://gist.github.com/anonymous/7eb080a67398f648c1709e41890f8c44
     sha256d = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
     hash_pair = lambda x, y: sha256d(x[::-1] + y[::-1])[::-1]
@@ -10,7 +11,7 @@ def merkle_root(lst): # https://gist.github.com/anonymous/7eb080a67398f648c1709e
     if len(lst) % 2 == 1:
         lst.append(lst[-1])
     return merkle_root([hash_pair(x,y) for x, y in zip(*[iter(lst)]*2)])
-
+    
 def read_bytes(file,n,byte_order = 'L'):
     data = file.read(n)
     if byte_order == 'L':
@@ -63,10 +64,10 @@ try:
     # Executing a SQL query
     i=0
     cursor.execute("CREATE TABLE IF NOT EXISTS BITCOIN_BLOCKS ( id serial, prev_hash text not null, block_hash text not null, nonce text not null, merkle_root text not null, difficulty text not null, timestamp text not null, tx_count int not null,  version text not null, block_size text not null);")
-    #cursor.execute("create index bitcoin_index on BITCOIN_BLOCKS using lsm3(id);")
+    cursor.execute("create index bitcoin_index on BITCOIN_BLOCKS using lsm3(id);")
     cursor.execute("CREATE TABLE IF NOT EXISTS BITCOIN_TX ( id serial, input_hash text not null, input_script text not null, input_num int not null, output_script text not null, output_num int not null, tx_hash text not null, block_hash text not null, value text not null);")
     connection.commit()
-    dirA = '/home/tula/Documents/631/blockchain/'  # Directory where blk*.dat files are stored
+
 
     fList = os.listdir(dirA)
     fList = [x for x in fList if (x.endswith('.dat') and x.startswith('blk'))]
@@ -114,6 +115,7 @@ try:
             RawTX = '';
             tx_hashes = []
             cursor.execute(f"INSERT INTO BITCOIN_BLOCKS VALUES (DEFAULT,'{prevhash}','{blockhash}','{nonce}','{merkleroot}','{difficulty}','{timestamp}','{tx_num}','{version}','{blocksize}');")
+            print(f"Block {blockhash} Added")
             for k in range(txCount):
                 tmpHex = read_bytes(f, 4)
                 RawTX = reverse(tmpHex)
@@ -256,6 +258,11 @@ try:
             if tmpHex != merkleroot:
                 print('Merkle roots does not match! >', merkleroot, tmpHex)
 
+    cursor.execute(f"select * from BITCOIN_BLOCKS;")
+    results = cursor.fetchmany(5)
+    print("Block List")
+    for i in results:
+        print(i)
 
     connection.commit()
 except (Exception, Error) as error:
@@ -265,3 +272,4 @@ finally:
         cursor.close()
         connection.close()
         print("PostgreSQL connection is closed")
+
