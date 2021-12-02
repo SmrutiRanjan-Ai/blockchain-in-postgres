@@ -1,0 +1,5 @@
+# blockchain extension
+comment = 'function to count number of specified characters'
+default_version = '1.0'
+module_pathname = '$libdir/blockchain'
+relocatable = true
